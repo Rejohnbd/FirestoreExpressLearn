@@ -71,17 +71,51 @@ app.post('/signup', (req, res) => {
     };
 
     //Validate data
-    
-
-    // Firebase Auth Create User
-    firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
-        .then(data => {
-            return res.status(201).json({ message: `User ${data.user.uid} signed up successfully` });
+    let token, userId;
+    admin.firestore().doc(`/users/${newUser.handle}`).get()
+        .then(doc => {
+            if(doc.exists){
+                return res.status(400).json({ handle: 'This handle is alreary taken.' })
+            }else{
+                return firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
+            }
         })
-        .catch( err => {
+        .then(data => {
+            userId = data.user.uid;
+            return data.user.getIdToken();
+        })
+        .then(idToken => {
+            token = idToken;
+            // return res.status(201).json({ token })
+            const userCredentials = {
+                handle: newUser.handle,
+                email: newUser.email,
+                createdAt: new Date().toISOString(), 
+                userId
+            };
+            return admin.firestore().doc(`/users/${newUser.handle}`).set(userCredentials);
+        })
+        .then(() => {
+            return res.status(201).json({ token });
+        })
+        .catch(err => {
             console.error(err);
-            return res.status(500).json({ error: err.code });
+            if(err.code === 'auth/email-already-in-use'){
+                return res.status(400).json({ email: 'Email is already in Used' })
+            }else{
+                return res.status(500).json({ error: err.code })
+            }
         });
+
+        // Firebase Auth Create User
+    // firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
+    //     .then(data => {
+    //         return res.status(201).json({ message: `User ${data.user.uid} signed up successfully` });
+    //     })
+    //     .catch( err => {
+    //         console.error(err);
+    //         return res.status(500).json({ error: err.code });
+    //     });
 });
 
 exports.api = functions.region('asia-east2').https.onRequest(app);
