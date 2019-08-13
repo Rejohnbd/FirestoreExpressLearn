@@ -94,6 +94,9 @@ exports.commentOnScream = (req, res) => {
             if(!doc.exists) {
                 return res.status(400).json({ error: 'Scream not found' });
             }
+            return doc.ref.update({ commentCount: doc.data().commentCount + 1 });
+        })
+        .then(() => {
             return admin.firestore().collection('comments').add(newComment);
         })
         .then(() => {
