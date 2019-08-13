@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
 
     admin.auth().verifyIdToken(idToken)
         .then(decodedToken => {
-            console.log(decodedToken);
+            // console.log(decodedToken);
             req.user = decodedToken;
             return admin.firestore().collection('users')
                         .where('userId', '==', req.user.uid)
