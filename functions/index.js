@@ -10,7 +10,8 @@ const {
 const { 
     getAllScreams, 
     postOneScream,
-    getScream
+    getScream,
+    commentOnScream
 } = require('./handlers/screams');
 const express = require('express');
 const app = express();
@@ -19,7 +20,7 @@ const app = express();
 app.get('/screams', getAllScreams);
 app.post('/scream', FBAuth, postOneScream);
 app.get('/scream/:screamId', getScream);
-
+app.post('/scream/:screamId/comment', FBAuth, commentOnScream);
 // Signup Route
 app.post('/signup', signup);
 app.post('/login', login);
