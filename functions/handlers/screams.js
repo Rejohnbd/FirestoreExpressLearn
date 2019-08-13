@@ -148,4 +148,45 @@ exports.likeScream = (req, res) => {
             console.error(err);
             res.status(500).json({ error: err.core });
         })
+};
+
+exports.unlikeScream = (req, res) => {
+    const likeDocument = admin.firestore()
+            .collection('likes')
+            .where('userHandle', '==', req.user.handle)
+            .where('screamId', '==', req.params.screamId)
+            .limit(1);
+    
+    const screamDocument = admin.firestore().doc(`/screams/${req.params.screamId}`);
+
+    let screamData;
+
+    screamDocument.get()
+        .then(doc => {
+            if(doc.exists){
+                screamData = doc.data();
+                screamData.screamId = doc.id;
+                return likeDocument.get();
+            } else {
+                return res.status(404).json({ error: 'Scream not found' });
+            }
+        })
+        .then(data => {
+            if(data.empty){
+                return res.status(400).json({ error: 'Scream not liked' });
+            } else {
+                return admin.firestore().doc(`/likes/${data.docs[0].id}`).delete()
+                    .then(() => {
+                        screamData.likeCount--;
+                        return screamDocument.update({ likeCount: screamData.likeCount });
+                    })
+                    .then(() => {
+                        res.json(screamData);
+                    })
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).json({ error: err.core });
+        })
 }
