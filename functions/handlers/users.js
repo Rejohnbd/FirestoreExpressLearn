@@ -151,11 +151,29 @@ exports.getAuthenticatedUser = (req, res) => {
             data.forEach(doc => {
                 userData.like.push(doc.data())
             });
+            // return res.json(userData);
+            return admin.firestore().collection('notifications').where('recipient', '==', req.user.handle)
+                .orderBy('createdAt', 'desc').limit(10).get();
+        })
+        .then(data => {
+            userData.notifications = [];
+            data.forEach(doc => {
+                userData.notifications.push({
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    createdAt: doc.data().createdAt,
+                    screamId: doc.data().screamId,
+                    type: doc.data().type,
+                    read: doc.data().read,
+                    notificationsId: doc.id
+                });
+
+            });
             return res.json(userData);
         })
         .catch(err => {
             console.error(err);
-            return res.status(500).json({ error: err.code });
+            return res.status(500).json({ error: err });
         });
 };
 
