@@ -184,9 +184,9 @@ exports.getAuthenticatedUser = (req, res) => {
             }
         })
         .then(data => {
-            userData.like = [];
+            userData.likes = [];
             data.forEach(doc => {
-                userData.like.push(doc.data())
+                userData.likes.push(doc.data())
             });
             // return res.json(userData);
             return admin.firestore().collection('notifications').where('recipient', '==', req.user.handle)
